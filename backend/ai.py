@@ -5,11 +5,11 @@ Uses Google GenAI API (google-genai) to generate advisory verdicts for disputed 
 Never raises — returns None on any failure (network, timeout, parse error, validation error).
 """
 
-import os
+import hashlib
 import json
 import logging
-import hashlib
-from typing import Any
+import os
+
 from google import genai
 from google.genai import types
 
@@ -100,14 +100,19 @@ Return ONLY the JSON verdict."""
                 response_mime_type="application/json",
             ),
         )
-    except Exception as e:
+    except (
+        genai.errors.APIError,
+        genai.errors.ClientError,
+        ValueError,
+        RuntimeError,
+    ) as e:
         logger.error(f"Gemini API call failed: {type(e).__name__}: {e}")
         return None
 
     # Extract text content
     try:
         content = response.text if response.text else ""
-    except Exception as e:
+    except (AttributeError, ValueError) as e:
         logger.error(f"Failed to extract response content: {e}")
         return None
 
@@ -115,7 +120,9 @@ Return ONLY the JSON verdict."""
     verdict = _parse_verdict_json(content)
     if verdict is None:
         content_hash = hashlib.sha256(content.encode()).hexdigest()[:16]
-        logger.error(f"Failed to parse AI response as valid verdict (hash: {content_hash})")
+        logger.error(
+            f"Failed to parse AI response as valid verdict (hash: {content_hash})"
+        )
         return None
 
     # Validate verdict structure and consistency
@@ -204,10 +211,9 @@ def _validate_verdict(v: dict) -> bool:
 # Self-test: run `python ai.py` to see sample verdicts
 # ============================================================
 if __name__ == "__main__":
-    import sys
 
     # Sample disputes for prompt tuning
-    test_deals = [
+    test_deals: list[dict[str, str | int]] = [
         {
             "title": "Logo design for startup",
             "description": "Modern minimalist logo, 3 revisions included, source files delivered",
@@ -246,9 +252,9 @@ if __name__ == "__main__":
 
     for i, deal in enumerate(test_deals, 1):
         print(f"--- Test {i}: {deal['title']} ---")
-        print(f"Dispute: {deal['disputeReason'][:80]}...")
+        print(f"Dispute: {str(deal['disputeReason'])[:80]}...")
         verdict = get_ai_verdict(deal)
-        if verdict:
+        if verdict is not None:
             print(f"Recommendation: {verdict['recommendation']}")
             print(f"Seller Share: {verdict['sellerSharePercent']}%")
             print(f"Confidence: {verdict['confidence']}")

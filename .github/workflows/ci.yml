@@ -49,6 +49,10 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -e .[dev]
+          # Verify linting tools are available
+          ruff --version
+          black --version
+          mypy --version
 
       - name: Wait for PostgreSQL
         run: |

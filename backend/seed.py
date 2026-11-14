@@ -9,14 +9,18 @@ Connection is provided by caller (db.get_conn() with row_factory=dict_row).
 
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import psycopg
 from psycopg.rows import dict_row
 
-
 # Base time for consistent ordering (millisecond precision ISO UTC)
-BASE_TIME = datetime(2026, 1, 15, 10, 0, 0)
+BASE_TIME = datetime(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
+
+# Type alias for demo deal structure
+DemoDeal = dict[str, Any]
+DemoEvent = dict[str, Any]
 
 
 def _iso(ms_offset: int = 0) -> str:
@@ -29,7 +33,7 @@ def _uuid() -> str:
     return str(uuid.uuid4())
 
 
-DEMO_DEALS = [
+DEMO_DEALS: list[DemoDeal] = [
     # 1. CREATED — Logo design, waiting for buyer
     {
         "id": "11111111-1111-1111-1111-111111111111",
@@ -59,7 +63,7 @@ DEMO_DEALS = [
     # 2. FUNDED — Used laptop, buyer funded, seller yet to deliver
     {
         "id": "22222222-2222-2222-2222-222222222222",
-        "title": "MacBook Pro 14\" M2 Pro 2023 — 16GB/512GB",
+        "title": 'MacBook Pro 14" M2 Pro 2023 — 16GB/512GB',
         "description": "Space Gray, 95% battery health, no scratches. Includes original box, 96W charger, USB-C cable. Purchased Jan 2024, AppleCare+ until Jan 2026.",
         "amount": 125000,
         "status": "FUNDED",
@@ -258,7 +262,7 @@ DEMO_DEALS = [
 ]
 
 
-def seed(conn: psycopg.Connection) -> None:
+def seed(conn: psycopg.Connection[Any]) -> None:
     """
     Wipe and load demo data into deals and events tables.
 
@@ -329,40 +333,58 @@ if __name__ == "__main__":
     import sys
 
     # Use DATABASE_URL from env or default local
-    database_url = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/tijori")
+    database_url = os.getenv(
+        "DATABASE_URL", "postgresql://user:pass@localhost:5432/tijori"
+    )
 
     try:
         # Connect with dict_row factory for verification
-        conn = psycopg.connect(database_url, row_factory=dict_row, autocommit=False)
+        conn = psycopg.connect(database_url, row_factory=dict_row, autocommit=False)  # type: ignore[assignment]
         seed(conn)
         conn.commit()
 
         # Print summary
         cur = conn.cursor()
-        cur.execute("SELECT id, title, status, seller_name, buyer_name, amount FROM deals ORDER BY created_at")
+        cur.execute(
+            "SELECT id, title, status, seller_name, buyer_name, amount FROM deals ORDER BY created_at"
+        )
         print("\nDeals:")
         for row in cur.fetchall():
-            print(f"  {row['id'][:8]}... | {row['title'][:40]:40s} | {row['status']:18s} | ₹{row['amount']:,} | {row['seller_name']} → {row['buyer_name'] or '-'}")
+            print(
+                f"  {row['id'][:8]}... | {row['title'][:40]:40s} | {row['status']:18s} | ₹{row['amount']:,} | {row['seller_name']} → {row['buyer_name'] or '-'}"
+            )
 
-        cur.execute("SELECT deal_id, type, from_status, to_status, actor_role, actor_name FROM events ORDER BY deal_id, created_at")
+        cur.execute(
+            "SELECT deal_id, type, from_status, to_status, actor_role, actor_name FROM events ORDER BY deal_id, created_at"
+        )
         print("\nEvents:")
         for row in cur.fetchall():
-            print(f"  {row['deal_id'][:8]}... | {row['type']:14s} | {row['from_status']:10s} → {row['to_status']:10s} | {row['actor_role']:6s} | {row['actor_name']}")
+            print(
+                f"  {row['deal_id'][:8]}... | {row['type']:14s} | {row['from_status']:10s} → {row['to_status']:10s} | {row['actor_role']:6s} | {row['actor_name']}"
+            )
 
         # Verify ai_verdict on disputed deal
-        cur.execute("SELECT ai_verdict FROM deals WHERE id = %s", ("44444444-4444-4444-4444-444444444444",))
-        row = cur.fetchone()
+        cur.execute(
+            "SELECT ai_verdict FROM deals WHERE id = %s",
+            ("44444444-4444-4444-4444-444444444444",),
+        )
+        row = cur.fetchone()  # type: ignore[assignment]
         if row and row["ai_verdict"]:
-            verdict = row["ai_verdict"] if isinstance(row["ai_verdict"], dict) else json.loads(row["ai_verdict"])
-            print(f"\nAI Verdict on disputed deal:")
+            ai_verdict_val = row["ai_verdict"]
+            verdict = (
+                ai_verdict_val
+                if isinstance(ai_verdict_val, dict)
+                else json.loads(ai_verdict_val)
+            )
+            print("\nAI Verdict on disputed deal:")
             print(f"  Recommendation: {verdict['recommendation']}")
             print(f"  Seller Share: {verdict['sellerSharePercent']}%")
             print(f"  Confidence: {verdict['confidence']}")
             print(f"  Reasoning: {verdict['reasoning'][:80]}...")
 
-    except Exception as e:
+    except (psycopg.Error, json.JSONDecodeError, OSError, ValueError) as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     finally:
-        if 'conn' in locals():
+        if "conn" in locals():
             conn.close()
