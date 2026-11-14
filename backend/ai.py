@@ -1,7 +1,7 @@
 """
 AI Verdict Module for Tijori Escrow Platform
 
-Uses Google Gemini API to generate advisory verdicts for disputed deals.
+Uses Google GenAI API (google-genai) to generate advisory verdicts for disputed deals.
 Never raises — returns None on any failure (network, timeout, parse error, validation error).
 """
 
@@ -10,7 +10,8 @@ import json
 import logging
 import hashlib
 from typing import Any
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,12 +19,13 @@ logger = logging.getLogger(__name__)
 
 # Configuration from environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-AI_MODEL = os.getenv("AI_MODEL", "gemini-1.5-flash-latest")
+AI_MODEL = os.getenv("AI_MODEL", "gemini-2.5-flash")
 
 if not GEMINI_API_KEY:
     logger.warning("GEMINI_API_KEY not set — AI verdicts will always return None")
 else:
-    genai.configure(api_key=GEMINI_API_KEY)
+    # Initialize client
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
 # System prompt for the AI mediator
 SYSTEM_PROMPT = """You are a neutral escrow mediator for a freelance marketplace. Your job is to review a disputed deal and recommend a fair resolution based ONLY on the information provided.
@@ -88,15 +90,15 @@ Buyer: {deal.get('buyerName', 'unknown')}
 Return ONLY the JSON verdict."""
 
     try:
-        model = genai.GenerativeModel(AI_MODEL, system_instruction=SYSTEM_PROMPT)
-        response = model.generate_content(
-            user_prompt,
-            generation_config=genai.GenerationConfig(
+        response = client.models.generate_content(
+            model=AI_MODEL,
+            contents=user_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
                 temperature=0.1,
                 max_output_tokens=500,
                 response_mime_type="application/json",
             ),
-            request_options={"timeout": 15},
         )
     except Exception as e:
         logger.error(f"Gemini API call failed: {type(e).__name__}: {e}")
