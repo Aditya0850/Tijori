@@ -2,8 +2,8 @@ import { Deal, DealStatus, DashboardStats, AiVerdict } from "./types";
 
 // ── Helpers ────────────────────────────────────────────────────
 function getRole(): string {
-  if (typeof window === "undefined") return "SELLER";
-  return localStorage.getItem("tijori_role") || "SELLER";
+  if (typeof window === "undefined") return "seller";
+  return localStorage.getItem("tijori_role") || "seller";
 }
 
 function getName(): string {
@@ -57,10 +57,10 @@ export async function fundDeal(id: string): Promise<Deal> {
   return apiFetch<Deal>(`/api/deals/${id}/fund`, { method: "POST" });
 }
 
-export async function deliverDeal(id: string, proof: string): Promise<Deal> {
+export async function deliverDeal(id: string, deliveryProof: string): Promise<Deal> {
   return apiFetch<Deal>(`/api/deals/${id}/deliver`, {
     method: "POST",
-    body: JSON.stringify({ proof }),
+    body: JSON.stringify({ deliveryProof }),
   });
 }
 
@@ -68,21 +68,20 @@ export async function acceptDeal(id: string): Promise<Deal> {
   return apiFetch<Deal>(`/api/deals/${id}/accept`, { method: "POST" });
 }
 
-export async function disputeDeal(id: string, reason: string): Promise<Deal> {
+export async function disputeDeal(id: string, disputeReason: string): Promise<Deal> {
   return apiFetch<Deal>(`/api/deals/${id}/dispute`, {
     method: "POST",
-    body: JSON.stringify({ reason }),
+    body: JSON.stringify({ disputeReason }),
   });
 }
 
 export async function resolveDeal(
   id: string,
-  resolution: "RELEASE" | "REFUND" | "SPLIT",
-  splitPercent?: number
+  outcome: "RELEASE" | "REFUND" | "SPLIT"
 ): Promise<Deal> {
   return apiFetch<Deal>(`/api/deals/${id}/resolve`, {
     method: "POST",
-    body: JSON.stringify({ resolution, splitPercent }),
+    body: JSON.stringify({ outcome }),
   });
 }
 

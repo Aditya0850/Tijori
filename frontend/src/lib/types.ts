@@ -30,19 +30,23 @@ export interface User {
 export type VerdictType = "RELEASE" | "REFUND" | "SPLIT";
 
 export interface AiVerdict {
-  verdict: VerdictType;
-  sellerAmount: number;
-  buyerAmount: number;
+  recommendation: VerdictType;
+  sellerSharePercent: number;
+  confidence: "LOW" | "MEDIUM" | "HIGH";
   reasoning: string;
 }
 
-// ── Timeline event ─────────────────────────────────────────────
-export interface TimelineEvent {
+// ── Event (from backend) ───────────────────────────────────────
+export interface Event {
   id: string;
-  message: string;
-  actor: string;
-  timestamp: string; // ISO
-  icon?: string;
+  dealId: string;
+  type: DealStatus;
+  fromStatus: string;
+  toStatus: string;
+  actorRole: "seller" | "buyer" | "admin";
+  actorName: string;
+  note: string;
+  createdAt: string; // ISO
 }
 
 // ── Deal ───────────────────────────────────────────────────────
@@ -57,9 +61,9 @@ export interface Deal {
   deliveryProof: string | null;
   disputeReason: string | null;
   aiVerdict: AiVerdict | null;
-  timeline: TimelineEvent[];
+  events: Event[];
   createdAt: string; // ISO
-  updatedAt: string; // ISO
+  updatedAt?: string; // ISO (optional, can be derived from last event)
 }
 
 // ── Dashboard stats ────────────────────────────────────────────

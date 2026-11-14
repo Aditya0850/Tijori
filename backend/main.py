@@ -67,6 +67,57 @@ def health():
     return {"ok": True}
 
 
+@app.get("/api/stats")
+def get_stats(request: Request):
+    user_role, _ = get_auth(request)
+    require_role(user_role, ["admin"])
+
+    with get_conn() as conn, conn.cursor() as cur:
+        # Total deals
+        cur.execute("select count(*) as cnt from deals")
+        row = cur.fetchone()
+        total_deals: int = row["cnt"] if row else 0
+
+        # Money in escrow (FUNDED + DELIVERED + DISPUTED)
+        cur.execute("""
+            select coalesce(sum(amount), 0) as total
+            from deals
+            where status in ('FUNDED', 'DELIVERED', 'DISPUTED')
+        """)
+        row = cur.fetchone()
+        money_in_escrow: int = row["total"] if row else 0
+
+        # Completed value
+        cur.execute("""
+            select coalesce(sum(amount), 0) as total
+            from deals
+            where status = 'COMPLETED'
+        """)
+        row = cur.fetchone()
+        completed_value: int = row["total"] if row else 0
+
+        # Disputes
+        cur.execute("select count(*) as cnt from deals where status = 'DISPUTED'")
+        row = cur.fetchone()
+        open_disputes: int = row["cnt"] if row else 0
+
+        cur.execute("""
+            select count(*) as cnt from deals
+            where status in ('RESOLVED_RELEASED', 'RESOLVED_REFUNDED', 'RESOLVED_SPLIT')
+        """)
+        row = cur.fetchone()
+        resolved_disputes: int = row["cnt"] if row else 0
+
+        return {
+            "totalDeals": total_deals,
+            "moneyInEscrow": money_in_escrow,
+            "completedValue": completed_value,
+            "disputes": open_disputes + resolved_disputes,
+            "openDisputes": open_disputes,
+            "resolvedDisputes": resolved_disputes,
+        }
+
+
 @app.post("/api/dev/seed")
 def seed_data(request: Request):
 
