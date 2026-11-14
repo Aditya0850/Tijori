@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: tijori_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U test -d tijori_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/tijori_test
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      AI_MODEL: gemini-3.8-flash
+      ALLOW_SEED: "true"
+      HOST: 0.0.0.0
+      PORT: 8000
+      ALLOWED_ORIGINS: "*"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -e .[dev]
+          # Verify linting tools are available
+          ruff --version
+          black --version
+          mypy --version
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U test -d tijori_test; then
+              echo "PostgreSQL ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "PostgreSQL not ready after 30s" && exit 1
+
+      - name: Run server
+        run: |
+          cd backend
+          python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          sleep 3
+          echo $SERVER_PID > /tmp/server.pid
+
+      - name: Seed database
+        run: |
+          curl -sS -X POST http://localhost:8000/api/dev/seed \
+            -H "Content-Type: application/json" \
+            -H "x-user-role: admin" \
+            -H "x-user-name: admin" | jq .
+
+      - name: Run integration tests
+        run: |
+          cd backend-tests
+          chmod +x test.sh
+          ./test.sh http://localhost:8000
+
+      - name: Stop server
+        if: always()
+        run: |
+          kill $(cat /tmp/server.pid 2>/dev/null) 2>/dev/null || true
+
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dev dependencies
+        run: pip install -e .[dev]
+
+      - name: Run ruff
+        run: ruff check backend backend-tests
+
+      - name: Run black (check)
+        run: black --check backend backend-tests
+
+      - name: Run mypy
+        run: mypy backend --ignore-missing-imports

@@ -4,7 +4,7 @@ services:
     runtime: python
     region: singapore
     plan: free
-    buildCommand: "pip install -r backend/requirements.txt"
+    buildCommand: "pip install -e ."
     startCommand: "cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
@@ -12,7 +12,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: AI_MODEL
-        value: "gemini-1.5-flash-latest"
+        value: "gemini-3.8-flash"
       - key: ALLOW_SEED
         value: "false"
         # Set to "true" temporarily after first deploy to seed demo data, then back to "false"

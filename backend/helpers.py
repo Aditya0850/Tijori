@@ -1,5 +1,8 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
+
+import psycopg
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
@@ -25,7 +28,7 @@ def new_id() -> str:
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def get_auth(request: Request) -> tuple[str, str]:
@@ -42,7 +45,9 @@ def get_auth(request: Request) -> tuple[str, str]:
 def require_role(user_role: str, allowed_roles: list[str]) -> None:
     """Raise FORBIDDEN if user_role not in allowed_roles."""
     if user_role not in allowed_roles:
-        raise ApiError(f"Role '{user_role}' not authorized for this action", "FORBIDDEN", 403)
+        raise ApiError(
+            f"Role '{user_role}' not authorized for this action", "FORBIDDEN", 403
+        )
 
 
 def assert_status(deal: dict, expected_status: str) -> None:
@@ -55,7 +60,9 @@ def assert_status(deal: dict, expected_status: str) -> None:
         )
 
 
-def get_deal_or_404(conn, deal_id: str) -> dict:
+def get_deal_or_404(
+    conn: psycopg.Connection[dict[str, Any]], deal_id: str
+) -> dict[str, Any]:
     """Fetch deal by ID or raise NOT_FOUND. Returns raw dict row."""
     # Validate UUID format first to return 404 instead of 500
     try:
@@ -68,11 +75,11 @@ def get_deal_or_404(conn, deal_id: str) -> dict:
         deal = cur.fetchone()
         if not deal:
             raise ApiError(f"Deal {deal_id} not found", "NOT_FOUND", 404)
-        return deal
+        return deal  # type: ignore[return-value]
 
 
 def log_event(
-    conn,
+    conn: psycopg.Connection[dict[str, Any]],
     deal_id: str,
     event_type: str,
     from_status: str,
@@ -93,6 +100,16 @@ def log_event(
             INSERT INTO events (id, deal_id, type, from_status, to_status, actor_role, actor_name, note, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
-            (event_id, deal_id, event_type, from_status, to_status, actor_role, actor_name, note, created_at),
+            (
+                event_id,
+                deal_id,
+                event_type,
+                from_status,
+                to_status,
+                actor_role,
+                actor_name,
+                note,
+                created_at,
+            ),
         )
     return event_id

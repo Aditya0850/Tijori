@@ -1,8 +1,12 @@
-import json, os, uuid
-from datetime import datetime, timezone
+import json
+import os
+import uuid
+from datetime import UTC, datetime
+from typing import Any
+
+import psycopg
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
-import psycopg
 
 load_dotenv()
 
@@ -41,11 +45,12 @@ CREATE TABLE IF NOT EXISTS events (
 );
 """
 
-def get_conn() -> psycopg.Connection:
+
+def get_conn() -> psycopg.Connection[dict[str, Any]]:
     url = os.getenv("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL environment variable is not set")
-    return psycopg.connect(url, row_factory=dict_row, autocommit=False)
+    return psycopg.connect(url, row_factory=dict_row, autocommit=False)  # type: ignore[return-value]
 
 
 def init_db() -> None:
@@ -62,7 +67,7 @@ def _to_iso(dt: datetime | str | None) -> str | None:
         return dt
     # Convert to UTC if timezone-aware, then format with Z suffix
     if dt.tzinfo is not None:
-        dt = dt.astimezone(timezone.utc)
+        dt = dt.astimezone(UTC)
     return dt.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
