@@ -12,7 +12,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: AI_MODEL
-        value: "gemini-3.8-flash"
+        value: "gemini-2.5-flash"
       - key: ALLOW_SEED
         value: "false"
         # Set to "true" temporarily after first deploy to seed demo data, then back to "false"

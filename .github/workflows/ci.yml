@@ -29,7 +29,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://test:test@localhost:5432/tijori_test
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      AI_MODEL: gemini-3.8-flash
+      AI_MODEL: gemini-2.5-flash
       ALLOW_SEED: "true"
       HOST: 0.0.0.0
       PORT: 8000
@@ -70,8 +70,16 @@ jobs:
           cd backend
           python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
           SERVER_PID=$!
-          sleep 3
           echo $SERVER_PID > /tmp/server.pid
+          # Wait for server to be fully ready with health check
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/api/health > /dev/null; then
+              echo "Server ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server not ready after 30s" && exit 1
 
       - name: Seed database
         run: |
