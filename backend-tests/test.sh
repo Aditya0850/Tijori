@@ -89,7 +89,7 @@ req_raw() {
 
 # Helper: extract JSON field
 json_get() {
-  echo "$1" | jq -r "$2"
+  echo "$1" | tr -d '\r' | jq -r "$2"
 }
 
 # Helper: assert JSON field equals value
@@ -166,7 +166,7 @@ event_count=$(echo "$events" | jq 'length')
 assert_eq "$event_count" "4" "event count (CREATED, FUNDED, DELIVERED, COMPLETED)" || { fail "Event count"; echo "$events"; exit 1; }
 
 # Check event types in order
-types=$(echo "$events" | jq -r '.[].type')
+types=$(echo "$events" | jq -r '.[]|.type' | tr -d '\r')
 expected_types=("CREATED" "FUNDED" "DELIVERED" "COMPLETED")
 i=0
 for t in $types; do
@@ -541,7 +541,7 @@ req POST "$API/deals/$deal_id_order/deliver" seller alice '{"deliveryProof":"x"}
 req POST "$API/deals/$deal_id_order/accept" buyer bob '{}' 200 >/dev/null
 resp=$(req GET "$API/deals/$deal_id_order" buyer bob '' 200)
 events=$(json_get "$resp" '.events')
-types=$(echo "$events" | jq -r '.[].type')
+types=$(echo "$events" | jq -r '.[]|.type' | tr -d '\r')
 expected=("CREATED" "FUNDED" "DELIVERED" "COMPLETED")
 i=0
 ordered=true
