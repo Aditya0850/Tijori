@@ -58,6 +58,8 @@ export interface Deal {
   status: DealStatus;
   sellerName: string;
   buyerName: string | null;
+  deliveryDeadline?: string; // Formatted date e.g. "2026-11-21" or ISO
+  timeLimitDays?: number; // e.g. 7 days
   deliveryProof: string | null;
   disputeReason: string | null;
   aiVerdict: AiVerdict | null;

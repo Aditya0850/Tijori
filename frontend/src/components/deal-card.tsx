@@ -28,9 +28,17 @@ export function DealCard({ deal, counterpartyName, actionNeeded }: DealCardProps
       <CardContent className="p-4 sm:p-5 flex flex-col gap-3.5">
         {/* Top: Deal ID + StatusBadge */}
         <div className="flex items-center justify-between gap-2">
-          <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-            {deal.id}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
+              {deal.id}
+            </span>
+            {deal.deliveryDeadline && (
+              <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
+                <Clock className="size-3 text-amber-600" />
+                {deal.timeLimitDays || 7}d limit
+              </span>
+            )}
+          </div>
           <StatusBadge status={deal.status} />
         </div>
 

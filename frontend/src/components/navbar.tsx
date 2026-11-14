@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -55,7 +56,7 @@ const roleConfig: Record<
 export function Navbar() {
   const [pathname, setPathname] = useState("");
   const router = useRouter();
-  const { user, isAuthenticated, switchRole, logout, loginAsPreset } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -66,11 +67,6 @@ export function Navbar() {
   const currentRole = user?.role || "SELLER";
   const roleInfo = roleConfig[currentRole];
   const RoleIcon = roleInfo.icon;
-
-  const handleRoleChange = (newRole: Role) => {
-    switchRole(newRole);
-    router.refresh();
-  };
 
   const handleLogout = () => {
     logout();
@@ -137,70 +133,28 @@ export function Navbar() {
 
           {isAuthenticated && user ? (
             <>
-              {/* Role Indicator & Fast Switcher */}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-3 h-9 gap-2 text-sm font-medium hover:bg-muted/60 transition-colors cursor-pointer outline-none">
-                  <RoleIcon className="size-4 text-muted-foreground" />
-                  <span className="hidden sm:inline">Workspace:</span>
-                  <span className="font-semibold text-foreground">{roleInfo.label}</span>
-                  <ChevronDown className="size-3.5 text-muted-foreground opacity-60" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-1">
-                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                    Switch Workspace Role
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => handleRoleChange("SELLER")}
-                    className={`flex items-center gap-2 text-sm font-medium ${
-                      user.role === "SELLER" ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 font-semibold" : ""
-                    }`}
-                  >
-                    <Briefcase className="size-4 text-emerald-600" />
-                    Freelancer / Seller
-                    {user.role === "SELLER" && <CheckCircle2 className="size-4 ml-auto text-emerald-600" />}
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onClick={() => handleRoleChange("BUYER")}
-                    className={`flex items-center gap-2 text-sm font-medium ${
-                      user.role === "BUYER" ? "bg-blue-50 text-blue-800 dark:bg-blue-950/40 font-semibold" : ""
-                    }`}
-                  >
-                    <ShoppingBag className="size-4 text-blue-600" />
-                    Client / Buyer
-                    {user.role === "BUYER" && <CheckCircle2 className="size-3.5 ml-auto text-blue-600" />}
-                  </DropdownMenuItem>
-
-                  {user.role === "ADMIN" && (
-                    <DropdownMenuItem
-                      onClick={() => handleRoleChange("ADMIN")}
-                      className={`flex items-center gap-2 text-sm font-medium ${
-                        user.role === "ADMIN" ? "bg-amber-50 text-amber-800 dark:bg-amber-950/40 font-semibold" : ""
-                      }`}
-                    >
-                      <Scale className="size-4 text-amber-600" />
-                      Arbitrator / Admin
-                      <CheckCircle2 className="size-4 ml-auto text-amber-600" />
-                    </DropdownMenuItem>
-                  )}
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                    Switch Verified Persona
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => loginAsPreset("seller")} className="text-sm">
-                    Arjun Verma (Creative Lead)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => loginAsPreset("buyer")} className="text-sm">
-                    Rohan Mehta (Tech Lead)
-                  </DropdownMenuItem>
-                  {user.role === "ADMIN" && (
-                    <DropdownMenuItem onClick={() => loginAsPreset("admin")} className="text-xs">
-                      Panchayat Compliance Desk
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Registered Role Badge (Fixed - No Role Swapping) */}
+              <div
+                className={`inline-flex items-center rounded-xl border px-3 h-9 gap-2 text-sm font-medium select-none shadow-xs ${
+                  user.role === "BUYER"
+                    ? "border-blue-200 bg-blue-50/60 text-blue-900 dark:bg-blue-950/40 dark:border-blue-900/60 dark:text-blue-200"
+                    : user.role === "SELLER"
+                    ? "border-emerald-200 bg-emerald-50/60 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-200"
+                    : "border-amber-200 bg-amber-50/60 text-amber-900 dark:bg-amber-950/40 dark:border-amber-900/60 dark:text-amber-200"
+                }`}
+              >
+                <RoleIcon
+                  className={`size-4 ${
+                    user.role === "BUYER"
+                      ? "text-blue-600 dark:text-blue-400"
+                      : user.role === "SELLER"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-amber-600 dark:text-amber-400"
+                  }`}
+                />
+                <span className="hidden sm:inline text-muted-foreground font-normal">Role:</span>
+                <span className="font-semibold">{roleInfo.label}</span>
+              </div>
 
               {/* User Avatar & Profile Dropdown */}
               <DropdownMenu>

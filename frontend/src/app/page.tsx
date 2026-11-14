@@ -177,17 +177,17 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-foreground">For Freelancers &amp; Agencies</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Stop chasing pending invoices on WhatsApp.</p>
+                    <p className="text-sm sm:text-base text-muted-foreground mt-1">Stop chasing pending invoices on WhatsApp.</p>
                   </div>
 
-                  <div className="space-y-3 text-xs">
-                    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50/60 dark:bg-red-950/30 text-red-900 dark:text-red-200 border border-red-200/60">
-                      <span className="text-base shrink-0">❌</span>
-                      <span>Client delays payment for weeks after final files are delivered.</span>
+                  <div className="space-y-3 text-sm sm:text-[0.95rem]">
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-red-50/60 dark:bg-red-950/30 text-red-900 dark:text-red-200 border border-red-200/60">
+                      <span className="text-base shrink-0 mt-0.5">❌</span>
+                      <span className="leading-relaxed">Client delays payment for weeks after final files are delivered.</span>
                     </div>
-                    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 border border-emerald-200/60">
-                      <span className="text-base shrink-0">✅</span>
-                      <span><strong>Tijori Solution:</strong> Client deposits 100% in UPI escrow upfront. You work with total financial security.</span>
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 border border-emerald-200/60">
+                      <span className="text-base shrink-0 mt-0.5">✅</span>
+                      <span className="leading-relaxed"><strong>Tijori Solution:</strong> Client deposits 100% in UPI escrow upfront. You work with total financial security.</span>
                     </div>
                   </div>
                 </CardContent>
@@ -201,17 +201,17 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-foreground">For Clients &amp; Startups</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Hire top talent without fear of unfinished projects.</p>
+                    <p className="text-sm sm:text-base text-muted-foreground mt-1">Hire top talent without fear of unfinished projects.</p>
                   </div>
 
-                  <div className="space-y-3 text-xs">
-                    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-red-50/60 dark:bg-red-950/30 text-red-900 dark:text-red-200 border border-red-200/60">
-                      <span className="text-base shrink-0">❌</span>
-                      <span>Paid 50% advance to an unknown freelancer who disappeared without completing the scope.</span>
+                  <div className="space-y-3 text-sm sm:text-[0.95rem]">
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-red-50/60 dark:bg-red-950/30 text-red-900 dark:text-red-200 border border-red-200/60">
+                      <span className="text-base shrink-0 mt-0.5">❌</span>
+                      <span className="leading-relaxed">Paid 50% advance to an unknown freelancer who disappeared without completing the scope.</span>
                     </div>
-                    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 border border-blue-200/60">
-                      <span className="text-base shrink-0">✅</span>
-                      <span><strong>Tijori Solution:</strong> Your money remains locked in escrow until you review and approve the agreed deliverable.</span>
+                    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 border border-blue-200/60">
+                      <span className="text-base shrink-0 mt-0.5">✅</span>
+                      <span className="leading-relaxed"><strong>Tijori Solution:</strong> Your money remains locked in escrow until you review and approve the agreed deliverable.</span>
                     </div>
                   </div>
                 </CardContent>
@@ -271,7 +271,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-base text-foreground">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{item.desc}</p>
+                    <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -291,7 +291,7 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold tracking-tight">Panchayat AI™ Arbitration</h3>
-                      <p className="text-xs text-muted-foreground">Automated neutral dispute evaluation for freelance contracts</p>
+                      <p className="text-sm text-muted-foreground">Automated neutral dispute evaluation for freelance contracts</p>
                     </div>
                   </div>
                   <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 text-xs">
@@ -306,30 +306,30 @@ export default function LandingPage() {
                   an equitable resolution (Full Release, Full Refund, or Pro-Rata Split) with human arbitrator oversight.
                 </p>
 
-                <div className="grid sm:grid-cols-3 gap-3 pt-2 text-xs">
+                <div className="grid sm:grid-cols-3 gap-3 pt-2 text-sm">
                   <div className="p-3.5 rounded-xl bg-card border border-border space-y-1">
-                    <span className="font-semibold text-emerald-700 flex items-center gap-1.5 text-xs">
+                    <span className="font-semibold text-emerald-700 flex items-center gap-1.5 text-sm">
                       <CheckCircle2 className="size-3.5" /> Scope Verification
                     </span>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       Validates deliverables against the signed contract specifications.
                     </p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card border border-border space-y-1">
-                    <span className="font-semibold text-amber-700 flex items-center gap-1.5 text-xs">
+                    <span className="font-semibold text-amber-700 flex items-center gap-1.5 text-sm">
                       <Scale className="size-3.5" /> Fair Pro-Rata Splits
                     </span>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       Calculates partial milestone payments if 40% or 60% of work was completed.
                     </p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-card border border-border space-y-1">
-                    <span className="font-semibold text-blue-700 flex items-center gap-1.5 text-xs">
+                    <span className="font-semibold text-blue-700 flex items-center gap-1.5 text-sm">
                       <ShieldCheck className="size-3.5" /> Human Arbitrator
                     </span>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       Platform compliance officer reviews and confirms the AI recommendation.
                     </p>
                   </div>
@@ -358,7 +358,7 @@ export default function LandingPage() {
                   <ShieldCheck className="size-5" />
                 </div>
                 <h3 className="font-bold text-base">RBI Compliant Escrow</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Operated in strict adherence with RBI guidelines for digital escrow and intermediary accounts.
                 </p>
               </div>
@@ -368,7 +368,7 @@ export default function LandingPage() {
                   <Smartphone className="size-5" />
                 </div>
                 <h3 className="font-bold text-base">Direct UPI Rails</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Support for Google Pay, PhonePe, Paytm, BHIM, and net-banking with instant IMPS/NEFT settlement.
                 </p>
               </div>
@@ -378,7 +378,7 @@ export default function LandingPage() {
                   <Lock className="size-5" />
                 </div>
                 <h3 className="font-bold text-base">Tamper-Proof Audit Trail</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Immutable chronological log of payment receipts, deliverables, and approval events.
                 </p>
               </div>

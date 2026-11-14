@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Briefcase,
   User,
+  Clock,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
@@ -32,14 +33,29 @@ import { toast } from "sonner";
 
 export default function CreateDealPage() {
   const router = useRouter();
-  const { user, switchRole } = useAuth();
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+
+  // Helper date generators
+  const formatDateToInput = (d: Date) => {
+    return d.toISOString().split("T")[0];
+  };
+
+  const getFutureDate = (days: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return formatDateToInput(d);
+  };
+
+  const tomorrowStr = getFutureDate(1);
 
   // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [freelancerName, setFreelancerName] = useState("Arjun Verma");
+  const [timeLimitDays, setTimeLimitDays] = useState<number>(7);
+  const [deadlineDate, setDeadlineDate] = useState<string>(getFutureDate(7));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const role = user?.role || "BUYER";
@@ -49,6 +65,31 @@ export default function CreateDealPage() {
     setMounted(true);
   }, []);
 
+  const handleSelectDays = (days: number) => {
+    setTimeLimitDays(days);
+    setDeadlineDate(getFutureDate(days));
+  };
+
+  const handleDateChange = (dateVal: string) => {
+    setDeadlineDate(dateVal);
+    if (dateVal) {
+      const selected = new Date(dateVal);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diffTime = selected.getTime() - today.getTime();
+      const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      setTimeLimitDays(diffDays);
+    }
+  };
+
+  const formattedDeadline = deadlineDate
+    ? new Date(deadlineDate).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-background">
@@ -57,7 +98,7 @@ export default function CreateDealPage() {
     );
   }
 
-  // Role Guard: Only Clients post projects
+  // Role Guard: Only Clients post projects (Fixed roles, no swapping)
   if (role !== "BUYER") {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -69,22 +110,24 @@ export default function CreateDealPage() {
                 <Briefcase className="size-7" />
               </div>
               <h2 className="text-xl font-bold">Client Workspace Required</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 You are currently signed in as <strong>{role === "SELLER" ? "Freelancer" : "Arbitrator"}</strong>.
-                In Tijori, <strong>Clients post the project</strong> and fund escrow, while Freelancers work on the project and submit deliverables.
+                In Tijori, <strong>Clients post projects</strong> and fund escrow, while Freelancers work on the project and submit deliverables. Roles are locked to your registered account.
               </p>
               <div className="flex flex-col gap-2 pt-2">
                 <Button
-                  onClick={() => {
-                    switchRole("BUYER");
-                    toast.success("Switched to Client workspace");
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+                  onClick={() => router.push("/dashboard")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
                 >
-                  Switch to Client Workspace
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => router.push("/dashboard")} className="text-xs">
                   Return to Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/login")}
+                  className="text-sm"
+                >
+                  Sign in with Client Account
                 </Button>
               </div>
             </CardContent>
@@ -116,6 +159,10 @@ export default function CreateDealPage() {
       toast.error("Please enter a valid escrow budget greater than ₹0");
       return;
     }
+    if (!deadlineDate) {
+      toast.error("Please specify a compulsory time limit / deadline for this project");
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -139,6 +186,8 @@ export default function CreateDealPage() {
           title: title.trim(),
           description: description.trim(),
           amount: numAmount,
+          deliveryDeadline: deadlineDate,
+          timeLimitDays: timeLimitDays || 7,
           status: "CREATED",
           sellerName: freelancerName.trim() || "Arjun Verma",
           buyerName: userName,
@@ -148,7 +197,7 @@ export default function CreateDealPage() {
           timeline: [
             {
               id: `t-${Date.now()}`,
-              message: `Project posted by Client (${userName}) — Awaiting escrow deposit`,
+              message: `Project posted by Client (${userName}) — Compulsory deadline: ${formattedDeadline} (${timeLimitDays} days)`,
               actor: userName,
               timestamp: now,
               icon: "plus",
@@ -160,6 +209,8 @@ export default function CreateDealPage() {
       } else {
         created.buyerName = userName;
         created.sellerName = freelancerName.trim() || "Arjun Verma";
+        created.deliveryDeadline = deadlineDate;
+        created.timeLimitDays = timeLimitDays || 7;
       }
 
       updateStoredDeal(created);
@@ -276,6 +327,75 @@ export default function CreateDealPage() {
                     />
                   </div>
 
+                  {/* Compulsory Project Time Limit */}
+                  <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-amber-50/20 dark:bg-amber-950/20 p-4 sm:p-5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="deadline" className="text-sm font-bold flex items-center gap-2 text-foreground">
+                        <Clock className="size-4 text-amber-600 dark:text-amber-400" />
+                        Project Time Limit &amp; Delivery Deadline *
+                      </Label>
+                      <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 text-xs font-bold uppercase tracking-wider">
+                        Compulsory
+                      </Badge>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Select turnaround duration or pick an exact calendar delivery date. The freelancer must deliver all agreed files before this cutoff.
+                    </p>
+
+                    {/* Quick Turnaround Presets */}
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: "3 Days", days: 3 },
+                        { label: "7 Days (1 Week)", days: 7 },
+                        { label: "14 Days (2 Weeks)", days: 14 },
+                        { label: "30 Days (1 Month)", days: 30 },
+                      ].map((preset) => {
+                        const isSelected = timeLimitDays === preset.days;
+                        return (
+                          <button
+                            key={preset.days}
+                            type="button"
+                            onClick={() => handleSelectDays(preset.days)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                              isSelected
+                                ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                                : "bg-card text-foreground border-border hover:border-amber-400/60"
+                            }`}
+                          >
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Exact Date Picker */}
+                    <div className="grid sm:grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground">Exact Due Date *</span>
+                        <Input
+                          id="deadline"
+                          type="date"
+                          min={tomorrowStr}
+                          value={deadlineDate}
+                          onChange={(e) => handleDateChange(e.target.value)}
+                          disabled={isSubmitting}
+                          required
+                          className="bg-card text-sm h-10"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground">Allowed Turnaround</span>
+                        <div className="flex items-center h-10 px-3 rounded-lg border border-border bg-card text-sm font-semibold">
+                          <span className="text-foreground">{timeLimitDays} Days</span>
+                          <span className="text-xs text-muted-foreground ml-auto font-normal">
+                            (Due {formattedDeadline})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Escrow Budget */}
                   <div className="space-y-1.5">
                     <Label htmlFor="amount" className="text-xs font-semibold">
@@ -360,6 +480,15 @@ export default function CreateDealPage() {
                   <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     {validAmount ? formatRupees(numAmount) : "₹0"}
                   </p>
+                </div>
+
+                {/* Compulsory Deadline Preview */}
+                <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/40 p-3 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between border border-amber-300/60">
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <Clock className="size-3.5 text-amber-600 shrink-0" />
+                    Delivery Cutoff: {timeLimitDays} Days
+                  </span>
+                  <span className="font-mono font-bold">Due {formattedDeadline}</span>
                 </div>
 
                 {/* Banner preview */}

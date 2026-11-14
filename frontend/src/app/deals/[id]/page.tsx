@@ -486,11 +486,17 @@ function DealDetailContent() {
           <div className="lg:col-span-7 space-y-6">
             {/* Header info */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <StatusBadge status={deal.status} />
                 <span className="text-xs text-muted-foreground">
                   Updated {timeAgo(deal.updatedAt)}
                 </span>
+                {deal.deliveryDeadline && (
+                  <Badge variant="outline" className="border-amber-300 bg-amber-50/60 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs font-semibold gap-1">
+                    <Clock className="size-3 text-amber-600" />
+                    Due: {new Date(deal.deliveryDeadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} ({deal.timeLimitDays || 7}d limit)
+                  </Badge>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
@@ -529,7 +535,7 @@ function DealDetailContent() {
                   {deal.description}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs border-t">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 text-xs border-t">
                   <div className="space-y-1">
                     <span className="text-muted-foreground flex items-center gap-1 text-xs">
                       <User className="size-3" /> Freelancer / Seller
@@ -552,6 +558,27 @@ function DealDetailContent() {
                         </span>
                       ) : (
                         <span className="italic text-muted-foreground">Awaiting Client Payment</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                      <Clock className="size-3 text-amber-600" /> Compulsory Deadline
+                    </span>
+                    <p className="font-semibold text-foreground text-sm">
+                      {deal.deliveryDeadline ? (
+                        <span>
+                          {new Date(deal.deliveryDeadline).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })}{" "}
+                          <span className="text-xs text-muted-foreground font-normal">
+                            ({deal.timeLimitDays || 7}d)
+                          </span>
+                        </span>
+                      ) : (
+                        <span>7 Days limit</span>
                       )}
                     </p>
                   </div>
