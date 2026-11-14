@@ -25,6 +25,9 @@ dev = [
     "mypy>=1.10.0",
 ]
 
+# Not an installable package - backend runs directly from source
+# Use pip install -r backend/requirements.txt for dependencies
+
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.0.0",
