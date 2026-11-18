@@ -29,16 +29,19 @@ interface TimelineProps {
 
 export function Timeline({ events }: TimelineProps) {
   return (
-    <div className="relative space-y-0">
+    <ol className="relative space-y-0" role="list" aria-label="Contract audit timeline">
       {events.map((event, index) => {
         const Icon = (event.icon && iconMap[event.icon]) || Circle;
         const isLast = index === events.length - 1;
 
         return (
-          <div key={event.id} className="relative flex gap-4 pb-6 last:pb-0">
+          <li key={event.id} className="relative flex gap-4 pb-6 last:pb-0">
             {/* Vertical line */}
             {!isLast && (
-              <div className="absolute left-[11px] top-6 h-[calc(100%-12px)] w-px bg-border" />
+              <div
+                className="absolute left-[11px] top-6 h-[calc(100%-12px)] w-px bg-border"
+                aria-hidden="true"
+              />
             )}
 
             {/* Dot / Icon */}
@@ -46,6 +49,7 @@ export function Timeline({ events }: TimelineProps) {
               className={cn(
                 "relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted ring-2 ring-background"
               )}
+              aria-hidden="true"
             >
               <Icon className="size-3 text-muted-foreground" />
             </div>
@@ -55,13 +59,13 @@ export function Timeline({ events }: TimelineProps) {
               <p className="text-sm leading-snug">{event.message}</p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="font-medium">{event.actor}</span>
-                <span>·</span>
-                <span>{timeAgo(event.timestamp)}</span>
+                <span aria-hidden="true">·</span>
+                <time dateTime={event.timestamp}>{timeAgo(event.timestamp)}</time>
               </div>
             </div>
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }
