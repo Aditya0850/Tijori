@@ -52,9 +52,11 @@ export function AiVerdictCard({ verdict, dealAmount, onAccept }: AiVerdictCardPr
     );
   }
 
-  const meta = verdictMeta[verdict.verdict];
-  const sellerPct = Math.round((verdict.sellerAmount / dealAmount) * 100);
+  const meta = verdictMeta[verdict.recommendation];
+  const sellerPct = verdict.sellerSharePercent;
   const buyerPct = 100 - sellerPct;
+  const sellerAmount = Math.round((dealAmount * sellerPct) / 100);
+  const buyerAmount = dealAmount - sellerAmount;
 
   return (
     <Card className="border-amber-300/80 bg-gradient-to-br from-amber-50/30 via-card to-card shadow-sm ring-1 ring-amber-400/20">
@@ -83,10 +85,10 @@ export function AiVerdictCard({ verdict, dealAmount, onAccept }: AiVerdictCardPr
         <div className="space-y-2 rounded-xl bg-background/80 p-3 border border-border/60">
           <div className="flex justify-between text-xs font-semibold">
             <span className="text-emerald-700 flex items-center gap-1">
-              Freelancer: {formatRupees(verdict.sellerAmount)} ({sellerPct}%)
+              Freelancer: {formatRupees(sellerAmount)} ({sellerPct}%)
             </span>
             <span className="text-blue-700 flex items-center gap-1">
-              Client: {formatRupees(verdict.buyerAmount)} ({buyerPct}%)
+              Client: {formatRupees(buyerAmount)} ({buyerPct}%)
             </span>
           </div>
 
@@ -120,7 +122,7 @@ export function AiVerdictCard({ verdict, dealAmount, onAccept }: AiVerdictCardPr
         {/* Accept Button */}
         <Button onClick={onAccept} className="w-full gap-2 text-xs font-semibold h-10 shadow-sm bg-amber-600 hover:bg-amber-700 text-white">
           <Gavel className="size-4" />
-          Ratify &amp; Execute Panchayat Ruling
+          Ratify & Execute Panchayat Ruling
         </Button>
       </CardContent>
     </Card>

@@ -32,8 +32,13 @@ export type VerdictType = "RELEASE" | "REFUND" | "SPLIT";
 export interface AiVerdict {
   recommendation: VerdictType;
   sellerSharePercent: number;
-  confidence: "LOW" | "MEDIUM" | "HIGH";
+  confidence: number; // 0.0 - 1.0
   reasoning: string;
+
+  // Computed convenience fields (not from backend)
+  sellerAmount?: number;
+  buyerAmount?: number;
+  verdict?: VerdictType; // alias for recommendation
 }
 
 // ── Event (from backend) ───────────────────────────────────────

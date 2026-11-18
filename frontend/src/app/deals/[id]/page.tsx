@@ -91,38 +91,23 @@ function DealDetailContent() {
   const userName = user?.name || "Arjun Verma";
 
   // Load deal
-  const loadDeal = async () => {
-    setLoading(true);
-    try {
-      let found: Deal | null = null;
+    const loadDeal = async () => {
+      setLoading(true);
       try {
-        found = await fetchDeal(dealId);
+        const found = await fetchDeal(dealId);
+
+        if (found) {
+          setDeal(found);
+          setNotFound(false);
+        } else {
+          setNotFound(true);
+        }
       } catch {
-        found = getStoredDeal(dealId);
-      }
-
-      if (!found) {
-        found = getStoredDeal(dealId);
-      }
-
-      if (found) {
-        setDeal(found);
-        setNotFound(false);
-      } else {
         setNotFound(true);
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      const local = getStoredDeal(dealId);
-      if (local) {
-        setDeal(local);
-        setNotFound(false);
-      } else {
-        setNotFound(true);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   useEffect(() => {
     setMounted(true);
@@ -289,13 +274,13 @@ function DealDetailContent() {
       }
 
       const sellerAmt = Math.round(deal.amount * 0.4);
-      const buyerAmt = deal.amount - sellerAmt;
-      const aiVerdict: AiVerdict = {
-        verdict: "SPLIT",
-        sellerAmount: sellerAmt,
-        buyerAmount: buyerAmt,
-        reasoning: `Panchayat AI evaluated the agreed specifications against the submitted deliverables and client claim: "${disputeReason.trim()}". The seller demonstrated partial milestone completion (estimated at 40%). Recommending an equitable pro-rata settlement: ₹${sellerAmt.toLocaleString("en-IN")} released to freelancer for work delivered, and ₹${buyerAmt.toLocaleString("en-IN")} refunded to client.`,
-      };
+            const buyerAmt = deal.amount - sellerAmt;
+            const aiVerdict: AiVerdict = {
+              recommendation: "SPLIT",
+              sellerSharePercent: 40,
+              confidence: 0.85,
+              reasoning: `Panchayat AI evaluated the agreed specifications against the submitted deliverables and client claim: "${disputeReason.trim()}". The seller demonstrated partial milestone completion (estimated at 40%). Recommending an equitable pro-rata settlement: ₹${sellerAmt.toLocaleString("en-IN")} released to freelancer for work delivered, and ₹${buyerAmt.toLocaleString("en-IN")} refunded to client.`,
+            };
 
       const now = new Date().toISOString();
       const disputeEvent: TimelineEvent = {
@@ -391,11 +376,11 @@ function DealDetailContent() {
   };
 
   const handleAcceptAiVerdict = () => {
-    if (!deal?.aiVerdict) return;
-    const v = deal.aiVerdict.verdict;
-    const splitPct = Math.round((deal.aiVerdict.sellerAmount / deal.amount) * 100);
-    handleResolve(v, splitPct);
-  };
+      if (!deal?.aiVerdict) return;
+      const v = deal.aiVerdict.recommendation;
+      const splitPct = deal.aiVerdict.recommendation === "SPLIT" ? deal.aiVerdict.sellerSharePercent : 100;
+      handleResolve(v, splitPct);
+    };
 
   if (!mounted || loading) {
     return (
@@ -505,11 +490,10 @@ function DealDetailContent() {
 
             {/* Escrow Status Banner */}
             <EscrowBanner
-              status={deal.status}
-              amount={deal.amount}
-              sellerAmount={deal.aiVerdict?.sellerAmount}
-              buyerAmount={deal.aiVerdict?.buyerAmount}
-            />
+                          status={deal.status}
+                          amount={deal.amount}
+                          aiVerdict={deal.aiVerdict}
+                        />
 
             {/* Contract Specifications */}
             <Card className="border-border shadow-sm">

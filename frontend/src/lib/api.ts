@@ -3,7 +3,9 @@ import { Deal, DealStatus, DashboardStats, AiVerdict } from "./types";
 // ── Helpers ────────────────────────────────────────────────────
 function getRole(): string {
   if (typeof window === "undefined") return "seller";
-  return localStorage.getItem("tijori_role") || "seller";
+  const role = localStorage.getItem("tijori_role") || "seller";
+  // Backend expects lowercase roles
+  return role.toLowerCase();
 }
 
 function getName(): string {
@@ -26,7 +28,8 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || `API error: ${res.status}`);
+    // Backend returns { error: { code: string, message: string } }
+    throw new Error(body.error?.message || `API error: ${res.status}`);
   }
 
   return res.json();

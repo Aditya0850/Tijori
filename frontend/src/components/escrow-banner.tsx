@@ -1,12 +1,11 @@
 import { cn } from "@/lib/utils";
 import { formatRupees } from "@/lib/format";
-import type { DealStatus } from "@/lib/types";
+import type { DealStatus, AiVerdict } from "@/lib/types";
 
 interface EscrowBannerProps {
   status: DealStatus;
   amount: number;
-  sellerAmount?: number;
-  buyerAmount?: number;
+  aiVerdict?: AiVerdict;
 }
 
 interface BannerConfig {
@@ -18,9 +17,13 @@ interface BannerConfig {
 function getBannerConfig(
   status: DealStatus,
   amount: number,
-  sellerAmount?: number,
-  buyerAmount?: number
+  aiVerdict?: AiVerdict
 ): BannerConfig {
+  // Calculate amounts from aiVerdict if SPLIT
+  const sellerSharePercent = aiVerdict?.recommendation === "SPLIT" ? aiVerdict.sellerSharePercent : undefined;
+  const sellerAmount = sellerSharePercent ? Math.round((amount * sellerSharePercent) / 100) : undefined;
+  const buyerAmount = sellerAmount ? amount - sellerAmount : undefined;
+  
   switch (status) {
     case "FUNDED":
     case "DELIVERED":
@@ -67,10 +70,9 @@ function getBannerConfig(
 export function EscrowBanner({
   status,
   amount,
-  sellerAmount,
-  buyerAmount,
+  aiVerdict,
 }: EscrowBannerProps) {
-  const config = getBannerConfig(status, amount, sellerAmount, buyerAmount);
+  const config = getBannerConfig(status, amount, aiVerdict);
 
   return (
     <div

@@ -69,42 +69,55 @@ def health():
 
 @app.get("/api/stats")
 def get_stats(request: Request):
-    user_role, _ = get_auth(request)
-    require_role(user_role, ["admin"])
+    user_role, user_name = get_auth(request)
 
     with get_conn() as conn, conn.cursor() as cur:
-        # Total deals
-        cur.execute("select count(*) as cnt from deals")
+        # Build WHERE clause based on role
+        if user_role == "seller":
+            where_clause = "where seller_name = %s"
+            params = (user_name,)
+        elif user_role == "buyer":
+            where_clause = "where buyer_name = %s"
+            params = (user_name,)
+        else:
+            where_clause = ""
+            params = ()
+
+        # Total deals (role-filtered)
+        cur.execute(f"select count(*) as cnt from deals {where_clause}", params)
         row = cur.fetchone()
         total_deals: int = row["cnt"] if row else 0
 
-        # Money in escrow (FUNDED + DELIVERED + DISPUTED)
-        cur.execute("""
+        # Money in escrow (FUNDED + DELIVERED + DISPUTED) - role-filtered
+        cur.execute(f"""
             select coalesce(sum(amount), 0) as total
             from deals
-            where status in ('FUNDED', 'DELIVERED', 'DISPUTED')
-        """)
+            {where_clause}
+            {'and' if where_clause else 'where'} status in ('FUNDED', 'DELIVERED', 'DISPUTED')
+        """, params)
         row = cur.fetchone()
         money_in_escrow: int = row["total"] if row else 0
 
-        # Completed value
-        cur.execute("""
+        # Completed value - role-filtered
+        cur.execute(f"""
             select coalesce(sum(amount), 0) as total
             from deals
-            where status = 'COMPLETED'
-        """)
+            {where_clause}
+            {'and' if where_clause else 'where'} status = 'COMPLETED'
+        """, params)
         row = cur.fetchone()
         completed_value: int = row["total"] if row else 0
 
-        # Disputes
-        cur.execute("select count(*) as cnt from deals where status = 'DISPUTED'")
+        # Disputes - role-filtered
+        cur.execute(f"select count(*) as cnt from deals {where_clause} {'and' if where_clause else 'where'} status = 'DISPUTED'", params)
         row = cur.fetchone()
         open_disputes: int = row["cnt"] if row else 0
 
-        cur.execute("""
+        cur.execute(f"""
             select count(*) as cnt from deals
-            where status in ('RESOLVED_RELEASED', 'RESOLVED_REFUNDED', 'RESOLVED_SPLIT')
-        """)
+            {where_clause}
+            {'and' if where_clause else 'where'} status in ('RESOLVED_RELEASED', 'RESOLVED_REFUNDED', 'RESOLVED_SPLIT')
+        """, params)
         row = cur.fetchone()
         resolved_disputes: int = row["cnt"] if row else 0
 
@@ -129,10 +142,10 @@ def seed_data(request: Request):
         raise ApiError("Seeding is disabled", "FORBIDDEN", 403)
 
     with get_conn() as conn:
-        seed(conn)
+        deals_created = seed(conn)
         conn.commit()
 
-    return {"ok": True, "dealsCreated": 5}
+    return {"ok": True, "dealsCreated": deals_created}
 
 
 @app.post("/api/deals", status_code=201)
@@ -201,7 +214,12 @@ async def create_deal(request: Request):
         conn.commit()
 
         deal = get_deal_or_404(conn, deal_id)
-        return row_to_deal(deal)
+        # Get latest event time for updatedAt
+        with conn.cursor() as cur:
+            cur.execute("select max(created_at) as latest from events where deal_id = %s", (deal_id,))
+            row = cur.fetchone()
+            latest_event = row["latest"] if row else None
+        return row_to_deal(deal, latest_event)
 
 
 @app.get("/api/deals")
@@ -211,20 +229,31 @@ def list_deals(request: Request):
 
     with get_conn() as conn, conn.cursor() as cur:
         if user_role == "buyer":
-            cur.execute(
-                "select * from deals where status = 'CREATED' or buyer_name = %s order by created_at desc",
-                (user_name,),
-            )
+            cur.execute("""
+                select d.*,
+                    (select max(created_at) from events e where e.deal_id = d.id) as latest_event
+                from deals d
+                where d.status = 'CREATED' or d.buyer_name = %s
+                order by d.created_at desc
+            """, (user_name,))
         elif user_role == "seller":
-            cur.execute(
-                "select * from deals where seller_name = %s order by created_at desc",
-                (user_name,),
-            )
+            cur.execute("""
+                select d.*,
+                    (select max(created_at) from events e where e.deal_id = d.id) as latest_event
+                from deals d
+                where d.seller_name = %s
+                order by d.created_at desc
+            """, (user_name,))
         else:
-            cur.execute("select * from deals order by created_at desc")
+            cur.execute("""
+                select d.*,
+                    (select max(created_at) from events e where e.deal_id = d.id) as latest_event
+                from deals d
+                order by d.created_at desc
+            """)
 
         rows = cur.fetchall()
-        return [row_to_deal(row) for row in rows]
+        return [row_to_deal(row, row.get("latest_event")) for row in rows]
 
 
 @app.get("/api/deals/{deal_id}")
@@ -253,8 +282,11 @@ def get_deal(deal_id: str, request: Request):
             )
             events = cur.fetchall()
 
+            # Get latest event time for updatedAt
+            latest_event = events[-1]["created_at"] if events else None
+
             return {
-                "deal": row_to_deal(deal),
+                "deal": row_to_deal(deal, latest_event),
                 "events": [row_to_event(event) for event in events],
             }
 
@@ -290,7 +322,12 @@ def fund_deal(deal_id: str, request: Request):
             )
             conn.commit()
 
-            return row_to_deal(get_deal_or_404(conn, deal_id))
+            # Get latest event for updatedAt
+            with conn.cursor() as cur:
+                cur.execute("select max(created_at) as latest from events where deal_id = %s", (deal_id,))
+                row = cur.fetchone()
+                latest_event = row["latest"] if row else None
+            return row_to_deal(get_deal_or_404(conn, deal_id), latest_event)
 
 
 @app.post("/api/deals/{deal_id}/deliver")
@@ -340,7 +377,12 @@ async def deliver_deal(deal_id: str, request: Request):
             )
             conn.commit()
 
-            return row_to_deal(get_deal_or_404(conn, deal_id))
+            # Get latest event for updatedAt
+            with conn.cursor() as cur:
+                cur.execute("select max(created_at) as latest from events where deal_id = %s", (deal_id,))
+                row = cur.fetchone()
+                latest_event = row["latest"] if row else None
+            return row_to_deal(get_deal_or_404(conn, deal_id), latest_event)
 
 
 @app.post("/api/deals/{deal_id}/accept")
@@ -380,7 +422,12 @@ def accept_deal(deal_id: str, request: Request):
             )
             conn.commit()
 
-            return row_to_deal(get_deal_or_404(conn, deal_id))
+            # Get latest event for updatedAt
+            with conn.cursor() as cur:
+                cur.execute("select max(created_at) as latest from events where deal_id = %s", (deal_id,))
+                row = cur.fetchone()
+                latest_event = row["latest"] if row else None
+            return row_to_deal(get_deal_or_404(conn, deal_id), latest_event)
 
 
 @app.post("/api/deals/{deal_id}/dispute")
@@ -435,7 +482,12 @@ async def dispute_deal(deal_id: str, request: Request):
             )
             conn.commit()
 
-            return row_to_deal(get_deal_or_404(conn, deal_id))
+            # Get latest event for updatedAt
+            with conn.cursor() as cur:
+                cur.execute("select max(created_at) as latest from events where deal_id = %s", (deal_id,))
+                row = cur.fetchone()
+                latest_event = row["latest"] if row else None
+            return row_to_deal(get_deal_or_404(conn, deal_id), latest_event)
 
 
 @app.post("/api/deals/{deal_id}/resolve")
@@ -517,4 +569,9 @@ async def resolve(deal_id: str, request: Request):
             )
             conn.commit()
 
-            return row_to_deal(get_deal_or_404(conn, deal_id))
+            # Get latest event for updatedAt
+            with conn.cursor() as cur:
+                cur.execute("select max(created_at) as latest from events where deal_id = %s", (deal_id,))
+                row = cur.fetchone()
+                latest_event = row["latest"] if row else None
+            return row_to_deal(get_deal_or_404(conn, deal_id), latest_event)

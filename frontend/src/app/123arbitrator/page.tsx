@@ -441,24 +441,24 @@ export default function ArbitratorPortalPage() {
                         )}
 
                         {/* Panchayat AI Verdict preview */}
-                        {deal.aiVerdict ? (
-                          <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 p-3 text-xs space-y-1.5">
-                            <div className="flex items-center justify-between font-semibold text-amber-900 dark:text-amber-200">
-                              <span className="flex items-center gap-1.5">
-                                <Scale className="size-3.5" />
-                                Panchayat AI: {deal.aiVerdict.verdict}
-                              </span>
-                              {deal.aiVerdict.verdict === "SPLIT" && (
-                                <span className="font-mono text-xs font-semibold bg-amber-100/80 px-2 py-0.5 rounded">
-                                  ₹{deal.aiVerdict.sellerAmount} / ₹{deal.aiVerdict.buyerAmount}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-muted-foreground line-clamp-3 text-xs leading-relaxed">
-                              {deal.aiVerdict.reasoning}
-                            </p>
-                          </div>
-                        ) : (
+                                                {deal.aiVerdict ? (
+                                                  <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 p-3 text-xs space-y-1.5">
+                                                    <div className="flex items-center justify-between font-semibold text-amber-900 dark:text-amber-200">
+                                                      <span className="flex items-center gap-1.5">
+                                                        <Scale className="size-3.5" />
+                                                        Panchayat AI: {deal.aiVerdict.recommendation}
+                                                      </span>
+                                                      {deal.aiVerdict.recommendation === "SPLIT" && (
+                                                        <span className="font-mono text-xs font-semibold bg-amber-100/80 px-2 py-0.5 rounded">
+                                                          {deal.aiVerdict.sellerSharePercent}% Seller
+                                                        </span>
+                                                      )}
+                                                    </div>
+                                                    <p className="text-muted-foreground line-clamp-3 text-xs leading-relaxed">
+                                                      {deal.aiVerdict.reasoning}
+                                                    </p>
+                                                  </div>
+                                                ) : (
                           <div className="rounded-lg bg-muted p-2.5 text-xs text-muted-foreground">
                             Awaiting AI neural synthesis or manual arbitrator ruling.
                           </div>

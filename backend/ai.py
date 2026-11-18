@@ -13,9 +13,13 @@ import os
 from google import genai
 from google.genai import types
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure module logger (avoid basicConfig which sets root logger)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    logger.addHandler(handler)
 
 # Configuration from environment
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -99,6 +103,7 @@ Return ONLY the JSON verdict."""
                 max_output_tokens=500,
                 response_mime_type="application/json",
             ),
+            timeout=15.0,  # 15 second timeout per contract
         )
     except (
         genai.errors.APIError,

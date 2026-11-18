@@ -80,7 +80,7 @@ def _to_str(u: uuid.UUID | str | None) -> str | None:
     return str(u)
 
 
-def row_to_deal(row: dict) -> dict:
+def row_to_deal(row: dict, updated_at: str | None = None) -> dict:
     verdict = row["ai_verdict"]
     # JSONB comes back as dict (psycopg 3), not string
     if isinstance(verdict, str):
@@ -97,6 +97,7 @@ def row_to_deal(row: dict) -> dict:
         "disputeReason": row["dispute_reason"],
         "aiVerdict": verdict,
         "createdAt": _to_iso(row["created_at"]),
+        "updatedAt": _to_iso(updated_at) if updated_at else _to_iso(row["created_at"]),
     }
 
 

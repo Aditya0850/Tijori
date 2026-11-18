@@ -51,9 +51,10 @@ export default function DashboardPage() {
   const [dealInput, setDealInput] = useState<string>("");
 
   const role = user?.role || "SELLER";
-  const userName = user?.name || "Arjun Verma";
+    const userName = user?.name || "Arjun Verma";
+    const userId = user?.id;
 
-  const loadData = async () => {
+    const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -78,29 +79,26 @@ export default function DashboardPage() {
   }, []);
 
   // Filtered deals according to active role
-  const roleDeals = useMemo(() => {
-    if (!deals) return [];
-    if (role === "SELLER") {
-      return deals.filter(
-        (d) =>
-          d.sellerName.toLowerCase() === userName.toLowerCase() ||
-          d.sellerName.toLowerCase().includes("arjun") ||
-          d.sellerName === "Demo User"
-      );
-    } else if (role === "BUYER") {
-      return deals.filter(
-        (d) =>
-          (d.buyerName &&
-            (d.buyerName.toLowerCase() === userName.toLowerCase() ||
-              d.buyerName.toLowerCase().includes("rohan") ||
-              d.buyerName === "Demo User")) ||
-          d.status === "CREATED"
-      );
-    } else {
-      // Admin sees everything
-      return deals;
-    }
-  }, [deals, role, userName]);
+    const roleDeals = useMemo(() => {
+      if (!deals) return [];
+      if (role === "SELLER") {
+        return deals.filter(
+          (d) =>
+            d.sellerName === userName || // exact match by name
+            (userId && d.sellerName.toLowerCase().includes(userId.toLowerCase()))
+        );
+      } else if (role === "BUYER") {
+        return deals.filter(
+          (d) =>
+            (d.buyerName && d.buyerName === userName) || // exact match by name
+            (userId && d.buyerName?.toLowerCase().includes(userId.toLowerCase())) ||
+            d.status === "CREATED"
+        );
+      } else {
+        // Admin sees everything
+        return deals;
+      }
+    }, [deals, role, userName, userId]);
 
   // Tab & search-filtered deals
   const filteredDeals = useMemo(() => {
@@ -550,23 +548,23 @@ export default function DashboardPage() {
                             </p>
 
                             {deal.aiVerdict ? (
-                              <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 p-3 text-xs space-y-1.5">
-                                <div className="flex items-center justify-between font-semibold text-amber-900 dark:text-amber-200">
-                                  <span className="flex items-center gap-1.5">
-                                    <Scale className="size-3.5" />
-                                    Panchayat AI: {deal.aiVerdict.verdict}
-                                  </span>
-                                  {deal.aiVerdict.verdict === "SPLIT" && (
-                                    <span className="font-mono text-xs font-bold">
-                                      ₹{deal.aiVerdict.sellerAmount} / ₹{deal.aiVerdict.buyerAmount}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">
-                                  {deal.aiVerdict.reasoning}
-                                </p>
-                              </div>
-                            ) : (
+                                                          <div className="rounded-xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 p-3 text-xs space-y-1.5">
+                                                            <div className="flex items-center justify-between font-semibold text-amber-900 dark:text-amber-200">
+                                                              <span className="flex items-center gap-1.5">
+                                                                <Scale className="size-3.5" />
+                                                                Panchayat AI: {deal.aiVerdict.recommendation}
+                                                              </span>
+                                                              {deal.aiVerdict.recommendation === "SPLIT" && (
+                                                                <span className="font-mono text-xs font-bold">
+                                                                  {deal.aiVerdict.sellerSharePercent}% Seller
+                                                                </span>
+                                                              )}
+                                                            </div>
+                                                            <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">
+                                                              {deal.aiVerdict.reasoning}
+                                                            </p>
+                                                          </div>
+                                                        ) : (
                               <div className="rounded-lg bg-muted p-2.5 text-xs text-muted-foreground">
                                 Manual arbitrator review required
                               </div>

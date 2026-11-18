@@ -156,20 +156,23 @@ export function UpiModal({ open, onOpenChange, amount, onSuccess }: UpiModalProp
                       { id: "paytm", name: "Paytm UPI", color: "border-cyan-200 hover:bg-cyan-50/40" },
                       { id: "cred", name: "CRED / BHIM", color: "border-border hover:bg-muted/40" },
                     ].map((app) => (
-                      <button
-                        key={app.id}
-                        type="button"
-                        onClick={() => setSelectedApp(app.id)}
-                        className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all flex items-center justify-between ${
-                          selectedApp === app.id
-                            ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-600"
-                            : `${app.color} text-foreground`
-                        }`}
-                      >
-                        <span>{app.name}</span>
-                        {selectedApp === app.id && <CheckCircle2 className="size-3.5 text-emerald-600" />}
-                      </button>
-                    ))}
+                                          <button
+                                            key={app.id}
+                                            type="button"
+                                            onClick={() => setSelectedApp(app.id)}
+                                            role="radio"
+                                            aria-checked={selectedApp === app.id}
+                                            aria-label={`Select ${app.name} for UPI payment`}
+                                            className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                                              selectedApp === app.id
+                                                ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 ring-1 ring-emerald-600"
+                                                : `${app.color} text-foreground`
+                                            }`}
+                                          >
+                                            <span>{app.name}</span>
+                                            {selectedApp === app.id && <CheckCircle2 className="size-3.5 text-emerald-600" />}
+                                          </button>
+                                        ))}
                   </div>
 
                   <div className="space-y-1 pt-1">

@@ -262,13 +262,16 @@ DEMO_DEALS: list[DemoDeal] = [
 ]
 
 
-def seed(conn: psycopg.Connection[Any]) -> None:
+def seed(conn: psycopg.Connection[Any]) -> int:
     """
     Wipe and load demo data into deals and events tables.
 
     Args:
         conn: Open psycopg Connection (row_factory=dict_row), autocommit=False.
               Caller manages transaction; this function does NOT commit.
+
+    Returns:
+        Number of deals created.
     """
     cur = conn.cursor()
 
@@ -276,7 +279,9 @@ def seed(conn: psycopg.Connection[Any]) -> None:
     cur.execute("DELETE FROM events")
     cur.execute("DELETE FROM deals")
 
+    count = 0
     for deal in DEMO_DEALS:
+        count += 1
         # Insert deal
         ai_verdict_json = json.dumps(deal["ai_verdict"]) if deal["ai_verdict"] else None
         cur.execute(
@@ -325,6 +330,7 @@ def seed(conn: psycopg.Connection[Any]) -> None:
             )
 
     # Caller commits
+    return count
 
 
 # Allow running directly for quick verification (requires local PostgreSQL)

@@ -1,6 +1,6 @@
-import { Deal, DashboardStats } from "./types";
+import { Deal } from "./types";
 
-// ── Realistic Enterprise Freelance Deals ───────────────────────
+// ── Realistic Enterprise Freelance Deals (matching backend contract) ───────────────────────
 export const SEED_DEALS: Deal[] = [
   {
     id: "deal-001",
@@ -13,11 +13,11 @@ export const SEED_DEALS: Deal[] = [
     deliveryProof: null,
     disputeReason: null,
     aiVerdict: null,
-    timeline: [
-      { id: "t1", message: "Project posted by Rohan Mehta (Client) — Awaiting escrow deposit", actor: "Rohan Mehta", timestamp: "2026-11-14T06:00:00Z", icon: "plus" },
+    events: [
+      { id: "t1", dealId: "deal-001", type: "CREATED", fromStatus: "CREATED", toStatus: "CREATED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Deal created", createdAt: "2026-11-14T06:00:00.000Z" },
     ],
-    createdAt: "2026-11-14T06:00:00Z",
-    updatedAt: "2026-11-14T06:00:00Z",
+    createdAt: "2026-11-14T06:00:00.000Z",
+    updatedAt: "2026-11-14T06:00:00.000Z",
   },
   {
     id: "deal-002",
@@ -30,13 +30,13 @@ export const SEED_DEALS: Deal[] = [
     deliveryProof: "Final render deliverables exported in ProRes 422 & MP4: https://assets.tijoriescrow.in/deliveries/product-launch-final.mp4",
     disputeReason: null,
     aiVerdict: null,
-    timeline: [
-      { id: "t1", message: "Project posted by Rohan Mehta (Client)", actor: "Rohan Mehta", timestamp: "2026-11-12T10:00:00Z", icon: "plus" },
-      { id: "t2", message: "Escrow deposit confirmed — ₹12,000 locked in nodal account", actor: "Rohan Mehta", timestamp: "2026-11-12T11:30:00Z", icon: "wallet" },
-      { id: "t3", message: "Final deliverables submitted by Arjun Verma for review", actor: "Arjun Verma", timestamp: "2026-11-13T18:00:00Z", icon: "package" },
+    events: [
+      { id: "t1", dealId: "deal-002", type: "CREATED", fromStatus: "CREATED", toStatus: "CREATED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Deal created", createdAt: "2026-11-12T10:00:00.000Z" },
+      { id: "t2", dealId: "deal-002", type: "FUNDED", fromStatus: "CREATED", toStatus: "FUNDED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Funded by Rohan Mehta", createdAt: "2026-11-12T11:30:00.000Z" },
+      { id: "t3", dealId: "deal-002", type: "DELIVERED", fromStatus: "FUNDED", toStatus: "DELIVERED", actorRole: "seller", actorName: "Arjun Verma", note: "Delivered: Final render deliverables exported...", createdAt: "2026-11-13T18:00:00.000Z" },
     ],
-    createdAt: "2026-11-12T10:00:00Z",
-    updatedAt: "2026-11-13T18:00:00Z",
+    createdAt: "2026-11-12T10:00:00.000Z",
+    updatedAt: "2026-11-13T18:00:00.000Z",
   },
   {
     id: "deal-003",
@@ -49,20 +49,19 @@ export const SEED_DEALS: Deal[] = [
     deliveryProof: "Preview deployment: https://saas-launch-preview.vercel.app (Landing page completed, CMS not integrated)",
     disputeReason: "Only the hero and features sections were delivered. The interactive pricing calculator and CMS integration specified in milestone 2 were omitted. Requesting pro-rata adjustment.",
     aiVerdict: {
-      verdict: "SPLIT",
-      sellerAmount: 11200,
-      buyerAmount: 16800,
-      reasoning: "Panchayat AI evaluated the repository commit history against contractual deliverables. The frontend landing page was successfully built (approx 40% of scope), while CMS backend and pricing modules remain unbuilt. Recommending a 40/60 pro-rata settlement: ₹11,200 released to freelancer for completed UI, and ₹16,800 refunded to client.",
-    },
-    timeline: [
-      { id: "t1", message: "Project posted & scope defined by Rohan Mehta (Client)", actor: "Rohan Mehta", timestamp: "2026-11-08T09:00:00Z", icon: "plus" },
-      { id: "t2", message: "Escrow deposit confirmed — ₹28,000 locked in escrow", actor: "Rohan Mehta", timestamp: "2026-11-08T10:00:00Z", icon: "wallet" },
-      { id: "t3", message: "Partial delivery submitted by Priya Patel", actor: "Priya Patel", timestamp: "2026-11-11T14:00:00Z", icon: "package" },
-      { id: "t4", message: "Grievance submitted by client", actor: "Rohan Mehta", timestamp: "2026-11-11T20:00:00Z", icon: "alert-triangle" },
-      { id: "t5", message: "Panchayat AI evaluated case — recommends 40/60 SPLIT", actor: "Panchayat AI", timestamp: "2026-11-11T20:00:05Z", icon: "bot" },
+          recommendation: "SPLIT",
+          sellerSharePercent: 40,
+          confidence: 0.65,
+          reasoning: "Panchayat AI evaluated the repository commit history against contractual deliverables. The frontend landing page was successfully built (approx 40% of scope), while CMS backend and pricing modules remain unbuilt. Recommending a 40/60 pro-rata settlement: ₹11,200 released to freelancer for completed UI, and ₹16,800 refunded to client.",
+        },
+    events: [
+      { id: "t1", dealId: "deal-003", type: "CREATED", fromStatus: "CREATED", toStatus: "CREATED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Deal created", createdAt: "2026-11-08T09:00:00.000Z" },
+      { id: "t2", dealId: "deal-003", type: "FUNDED", fromStatus: "CREATED", toStatus: "FUNDED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Funded by Rohan Mehta", createdAt: "2026-11-08T10:00:00.000Z" },
+      { id: "t3", dealId: "deal-003", type: "DELIVERED", fromStatus: "FUNDED", toStatus: "DELIVERED", actorRole: "seller", actorName: "Priya Patel", note: "Delivered: Preview deployment...", createdAt: "2026-11-11T14:00:00.000Z" },
+      { id: "t4", dealId: "deal-003", type: "DISPUTED", fromStatus: "DELIVERED", toStatus: "DISPUTED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Disputed: Only the hero and features sections were delivered...", createdAt: "2026-11-11T20:00:00.000Z" },
     ],
-    createdAt: "2026-11-08T09:00:00Z",
-    updatedAt: "2026-11-11T20:00:05Z",
+    createdAt: "2026-11-08T09:00:00.000Z",
+    updatedAt: "2026-11-11T20:00:00.000Z",
   },
   {
     id: "deal-004",
@@ -75,14 +74,14 @@ export const SEED_DEALS: Deal[] = [
     deliveryProof: "Document repository: https://docs.google.com/document/d/whitepaper-upi-infra-final",
     disputeReason: null,
     aiVerdict: null,
-    timeline: [
-      { id: "t1", message: "Project posted by Amitabh Sen (Client)", actor: "Amitabh Sen", timestamp: "2026-11-05T08:00:00Z", icon: "plus" },
-      { id: "t2", message: "Payment deposited — ₹9,500 in escrow", actor: "Amitabh Sen", timestamp: "2026-11-05T09:00:00Z", icon: "wallet" },
-      { id: "t3", message: "Deliverables submitted", actor: "Arjun Verma", timestamp: "2026-11-07T12:00:00Z", icon: "package" },
-      { id: "t4", message: "Deliverables approved — ₹9,500 disbursed to seller", actor: "Amitabh Sen", timestamp: "2026-11-07T18:00:00Z", icon: "check-circle" },
+    events: [
+      { id: "t1", dealId: "deal-004", type: "CREATED", fromStatus: "CREATED", toStatus: "CREATED", actorRole: "buyer", actorName: "Amitabh Sen", note: "Deal created", createdAt: "2026-11-05T08:00:00.000Z" },
+      { id: "t2", dealId: "deal-004", type: "FUNDED", fromStatus: "CREATED", toStatus: "FUNDED", actorRole: "buyer", actorName: "Amitabh Sen", note: "Funded by Amitabh Sen", createdAt: "2026-11-05T09:00:00.000Z" },
+      { id: "t3", dealId: "deal-004", type: "DELIVERED", fromStatus: "FUNDED", toStatus: "DELIVERED", actorRole: "seller", actorName: "Arjun Verma", note: "Delivered: Document repository...", createdAt: "2026-11-07T12:00:00.000Z" },
+      { id: "t4", dealId: "deal-004", type: "COMPLETED", fromStatus: "DELIVERED", toStatus: "COMPLETED", actorRole: "buyer", actorName: "Amitabh Sen", note: "Accepted by Amitabh Sen", createdAt: "2026-11-07T18:00:00.000Z" },
     ],
-    createdAt: "2026-11-05T08:00:00Z",
-    updatedAt: "2026-11-07T18:00:00Z",
+    createdAt: "2026-11-05T08:00:00.000Z",
+    updatedAt: "2026-11-07T18:00:00.000Z",
   },
   {
     id: "deal-005",
@@ -95,26 +94,25 @@ export const SEED_DEALS: Deal[] = [
     deliveryProof: "Figma prototype link: https://figma.com/@neha/delivery-app-prototype-v2",
     disputeReason: "Only 10 screens were delivered instead of the agreed 15, and interactive component states were partially missing.",
     aiVerdict: {
-      verdict: "SPLIT",
-      sellerAmount: 12000,
-      buyerAmount: 6000,
-      reasoning: "Work was substantially executed (10 out of 15 screens completed with high fidelity). Recommending a 66/34 pro-rata settlement: ₹12,000 released to freelancer and ₹6,000 returned to client.",
-    },
-    timeline: [
-      { id: "t1", message: "Contract initiated", actor: "Neha Gupta", timestamp: "2026-11-01T10:00:00Z", icon: "plus" },
-      { id: "t2", message: "Escrow funded — ₹18,000 held in escrow", actor: "Rohan Mehta", timestamp: "2026-11-01T11:00:00Z", icon: "wallet" },
-      { id: "t3", message: "Prototype submitted", actor: "Neha Gupta", timestamp: "2026-11-02T16:00:00Z", icon: "package" },
-      { id: "t4", message: "Dispute opened by client", actor: "Rohan Mehta", timestamp: "2026-11-02T20:00:00Z", icon: "alert-triangle" },
-      { id: "t5", message: "Panchayat AI evaluated — recommends 66/34 SPLIT", actor: "Panchayat AI", timestamp: "2026-11-02T20:00:04Z", icon: "bot" },
-      { id: "t6", message: "Arbitrator ruling executed: ₹12,000 to seller, ₹6,000 to buyer", actor: "Compliance Arbitrator", timestamp: "2026-11-03T10:00:00Z", icon: "gavel" },
+          recommendation: "SPLIT",
+          sellerSharePercent: 66,
+          confidence: 0.85,
+          reasoning: "Work was substantially executed (10 out of 15 screens completed with high fidelity). Recommending a 66/34 pro-rata settlement: ₹12,000 released to freelancer and ₹6,000 returned to client.",
+        },
+    events: [
+      { id: "t1", dealId: "deal-005", type: "CREATED", fromStatus: "CREATED", toStatus: "CREATED", actorRole: "seller", actorName: "Neha Gupta", note: "Deal created", createdAt: "2026-11-01T10:00:00.000Z" },
+      { id: "t2", dealId: "deal-005", type: "FUNDED", fromStatus: "CREATED", toStatus: "FUNDED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Funded by Rohan Mehta", createdAt: "2026-11-01T11:00:00.000Z" },
+      { id: "t3", dealId: "deal-005", type: "DELIVERED", fromStatus: "FUNDED", toStatus: "DELIVERED", actorRole: "seller", actorName: "Neha Gupta", note: "Delivered: Figma prototype link...", createdAt: "2026-11-02T16:00:00.000Z" },
+      { id: "t4", dealId: "deal-005", type: "DISPUTED", fromStatus: "DELIVERED", toStatus: "DISPUTED", actorRole: "buyer", actorName: "Rohan Mehta", note: "Disputed: Only 10 screens were delivered...", createdAt: "2026-11-02T20:00:00.000Z" },
+      { id: "t5", dealId: "deal-005", type: "RESOLVED_SPLIT", fromStatus: "DISPUTED", toStatus: "RESOLVED_SPLIT", actorRole: "admin", actorName: "Compliance Arbitrator", note: "Resolved: SPLIT by admin", createdAt: "2026-11-03T10:00:00.000Z" },
     ],
-    createdAt: "2026-11-01T10:00:00Z",
-    updatedAt: "2026-11-03T10:00:00Z",
+    createdAt: "2026-11-01T10:00:00.000Z",
+    updatedAt: "2026-11-03T10:00:00.000Z",
   },
 ];
 
 // ── Mock stats by role ─────────────────────────────────────────
-export function getMockStats(role: string, name: string): DashboardStats {
+export function getMockStats(role: string, name: string) {
   const myDeals = SEED_DEALS.filter((d) =>
     role === "SELLER" ? d.sellerName === name : role === "BUYER" ? d.buyerName === name : true
   );
